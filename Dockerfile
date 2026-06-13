@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     imagemagick \
     libmagick++-dev \
+    libzmq3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. Miniforge 설치
