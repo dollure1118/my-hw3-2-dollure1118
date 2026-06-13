@@ -26,7 +26,7 @@ jobs:
 
       - name: Install Python dependencies via Conda
         run: |
-          conda install -n r-reticulate numpy pandas matplotlib polars statsmodels 
+          conda install -y -n r-reticulate -c conda-forge python=3.10 numpy pandas matplotlib polars statsmodels libexpat
         # 추가로 필요한 패키지 설치
         shell: bash -l {0}
 
@@ -48,7 +48,11 @@ jobs:
 
       - name: Render Quarto
         run: |
-          export RETICULATE_PYTHON=$(conda info --base)/envs/r-reticulate/bin/python
+          conda activate r-reticulate
+          export CONDA_ENV_PREFIX=$(conda info --base)/envs/r-reticulate
+          export RETICULATE_PYTHON=$CONDA_ENV_PREFIX/bin/python
+          export LD_LIBRARY_PATH=$CONDA_ENV_PREFIX/lib:${LD_LIBRARY_PATH:-}
+          python -c "import pyexpat, pandas, statsmodels.api; print('Python:', __import__('sys').executable); print('Expat:', pyexpat.EXPAT_VERSION)"
           quarto render
         shell: bash -l {0}
 
