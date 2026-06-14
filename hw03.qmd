@@ -517,6 +517,8 @@ EXPOSE 8888
 
 ### 답안
 
+`.github/workflows/publish.yml`에 Quarto 렌더링 이후 GHCR에 로그인하고 Docker 이미지를 빌드하여 `ghcr.io/${{ github.repository_owner }}/my-r-env:latest`로 푸시하는 단계를 추가하였다. 워크플로우는 `main` 브랜치에 push될 때 실행되며, `_site` 디렉토리를 `gh-pages` 브랜치로 배포하도록 설정하였다.
+
 ## 문제 3-3. GitHub Pages에 Binder 링크 추가
 
 GitHub Page를 사용하여 저장소를 웹페이지로 활용하는 부분은 숙제 2에서와 같다.
@@ -540,3 +542,10 @@ GitHub Page를 사용하여 저장소를 웹페이지로 활용하는 부분은 
 작업을 GitHub 원격 저장소로 push한 후 숙제 2 문제 3-3의 3, 4번 과정을 반복하라.
 
 ### 답안
+
+`README.md`에 다음 링크를 추가하였다.
+
+* [분석 리포트 (HTML)](https://dollure1118.github.io/my-hw3-2-dollure1118/hw03.html)
+* [주피터 노트북 (ipynb)](https://mybinder.org/v2/gh/dollure1118/my-hw3-2-dollure1118/gh-pages?urlpath=lab/tree/hw03.ipynb)
+
+GitHub Pages는 `gh-pages` 브랜치의 `/ (root)` 폴더를 사용하도록 설정하였다.
