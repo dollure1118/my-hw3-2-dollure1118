@@ -4552,7 +4552,7 @@ Model Family:                Binomial   Df Model:                           24
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -1899.6
 Date:                Sun, 14 Jun 2026   Deviance:                       3799.1
-Time:                        05:20:49   Pearson chi2:                 4.50e+03
+Time:                        05:31:30   Pearson chi2:                 4.50e+03
 No. Iterations:                     6   Pseudo R-squ. (CS):             0.1849
 Covariance Type:            nonrobust                                         
 ====================================================================================================
@@ -4685,7 +4685,7 @@ Model Family:                Binomial   Df Model:                           23
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -1899.7
 Date:                Sun, 14 Jun 2026   Deviance:                       3799.5
-Time:                        05:20:52   Pearson chi2:                 4.50e+03
+Time:                        05:31:33   Pearson chi2:                 4.50e+03
 No. Iterations:                     6   Pseudo R-squ. (CS):             0.1848
 Covariance Type:            nonrobust                                         
 ====================================================================================================
@@ -6743,7 +6743,7 @@ AlcoholDay                           0.1572      0.016      9.710      0.000    
 </div>
 <section id="답안-6" class="level3">
 <h3 class="anchored" data-anchor-id="답안-6">답안</h3>
-<p><code>.github/workflows/publish.yml</code>에 Quarto 렌더링 이후 GHCR에 로그인하고 Docker 이미지를 빌드하여 <code>ghcr.io/${{ github.repository_owner }}/my-r-env:latest</code>로 푸시하는 단계를 추가하였다. 워크플로우는 <code>main</code> 브랜치에 push될 때 실행되며, <code>_site</code> 디렉토리를 <code>gh-pages</code> 브랜치로 배포하도록 설정하였다.</p>
+<p><code>.github/workflows/publish.yml</code>에 Quarto 렌더링 이후 <code>_site</code> 디렉토리를 <code>gh-pages</code> 브랜치로 배포하는 단계를 두고, 개인 저장소에서는 GHCR에 로그인하여 Docker 이미지를 <code>ghcr.io/${{ github.repository_owner }}/my-r-env:latest</code>로 빌드 및 푸시하는 단계를 추가하였다. 워크플로우는 <code>main</code> 브랜치에 push될 때 실행된다.</p>
 </section>
 </section>
 <section id="문제-3-3.-github-pages에-binder-링크-추가" class="level2">
