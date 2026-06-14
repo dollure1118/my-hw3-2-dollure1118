@@ -408,7 +408,7 @@ $$
 
 ## R
 
-```{{r}}
+```{r}
 # Problem 2-1
 library(Lahman)
 library(dplyr)
@@ -570,7 +570,7 @@ print("log(RS)와 log(RA)를 따로 넣어도, log(RS/RA) 하나를 넣은 모�
 
 ## Python
 
-```{{python}}
+```{python}
 # Problem 2-1
 
 import numpy as np
@@ -792,14 +792,14 @@ print(
 
 ## R
 
-```{{r}}
+```{r}
 # Problem 2-2
 library(Lahman)
 library(dplyr)
 library(ggplot2)
 
 
-# 데이터 전처리 
+# 데이터 전처리
 predictors_2_2 <- c(
   "logRS", "logRA",
   "H", "X2B", "X3B", "HR", "BB", "SO", "CS", "HBP", "SF",
@@ -948,7 +948,7 @@ print("따라서 final model이 더 좋은 성능을 보인다. ")
 
 ## Python
 
-```{{python}}
+```{python}
 # Problem 2-2
 
 import numpy as np
@@ -1289,7 +1289,7 @@ print("따라서 final model이 더 좋은 성능을 보인다. ")
 
 ## R
 
-```{{r}}
+```{r}
 # Problem 2-3
 # 1. 포아송회귀 
 library(Lahman)
@@ -1620,7 +1620,7 @@ print(comparison_table)
 
 ## Python
 
-```{{python}}
+```{python}
 # Problem 2-3
 # 1. 포아송회귀
 
@@ -2254,6 +2254,440 @@ $$
 
 ### 답안
 
+::: {.panel-tabset}
+
+## R
+
+```{r}
+# Problem 2-4
+library(Lahman)
+library(dplyr)
+library(ggplot2)
+
+# 데이터 전처리
+teams_2_4 <- Lahman::Teams %>%
+  filter(
+    (
+      yearID >= 1994 & yearID <= 2005 |
+        yearID >= 2010 & yearID <= 2025
+    ),
+    yearID != 2020,
+    !is.na(W), !is.na(L), !is.na(R), !is.na(RA),
+    W + L > 0,
+    R > 0,
+    RA > 0
+  ) %>%
+  transmute(
+    yearID,
+    franchID,
+    teamID,
+    W,
+    L,
+    G = W + L,
+    RS = R,
+    RA = RA,
+    WPct = W / (W + L),
+    log_ratio = log(R / RA),
+    steroid = ifelse(yearID >= 1994 & yearID <= 2005, 1, 0),
+    era = ifelse(yearID >= 1994 & yearID <= 2005,
+                 "Steroid era: 1994-2005",
+                 "Recent era: 2010-2025")
+  ) %>%
+  mutate(
+    log_ratio_steroid = log_ratio * steroid,
+    era = factor(
+      era,
+      levels = c("Recent era: 2010-2025", "Steroid era: 1994-2005")
+    )
+  ) %>%
+  filter(WPct > 0, WPct < 1)
+
+cat("Years used:\n")
+print(sort(unique(teams_2_4$yearID)))
+cat("\nNumber of team-seasons by era:\n")
+print(table(teams_2_4$era))
+cat("\n")
+
+if (max(teams_2_4$yearID) < 2025) {
+  warning("The installed Lahman package does not include data through 2025.")
+}
+
+# -----------------------------
+# Logistic model implied by the given formula
+#
+# Given:
+#   WPct(i,t) = 1 / (1 + (RA_it / RS_it)^(k + g I_steroid))
+#
+# Then:
+#   logit(WPct) = (k + g I_steroid) * log(RS / RA)
+#               = k * log(RS / RA)
+#                 + g * I_steroid * log(RS / RA)
+#
+# Therefore:
+#   coefficient of log_ratio         = k for the recent era
+#   coefficient of log_ratio_steroid = g, the steroid-era change in k
+#   steroid-era k                    = k + g
+# -----------------------------
+
+model_null <- glm(
+  WPct ~ 0 + log_ratio,
+  data = teams_2_4,
+  weights = G,
+  family = binomial(link = "logit"),
+  control = glm.control(maxit = 100)
+)
+
+model_alt <- glm(
+  WPct ~ 0 + log_ratio + log_ratio_steroid,
+  data = teams_2_4,
+  weights = G,
+  family = binomial(link = "logit"),
+  control = glm.control(maxit = 100)
+)
+
+cat("Null model: common k for both eras\n")
+print(summary(model_null))
+cat("\n")
+
+cat("Alternative model: different k for steroid era\n")
+print(summary(model_alt))
+cat("\n")
+
+# -----------------------------
+# Estimates and confidence intervals
+# -----------------------------
+
+b <- coef(model_alt)
+V <- vcov(model_alt)
+
+k_recent_hat <- b[["log_ratio"]]
+g_hat <- b[["log_ratio_steroid"]]
+k_steroid_hat <- k_recent_hat + g_hat
+
+se_k_recent <- sqrt(V["log_ratio", "log_ratio"])
+se_g <- sqrt(V["log_ratio_steroid", "log_ratio_steroid"])
+se_k_steroid <- sqrt(
+  V["log_ratio", "log_ratio"] +
+    V["log_ratio_steroid", "log_ratio_steroid"] +
+    2 * V["log_ratio", "log_ratio_steroid"]
+)
+
+zcrit <- qnorm(0.975)
+
+estimate_table <- data.frame(
+  quantity = c(
+    "k_recent",
+    "g_change_steroid_minus_recent",
+    "k_steroid"
+  ),
+  estimate = c(k_recent_hat, g_hat, k_steroid_hat),
+  std_error = c(se_k_recent, se_g, se_k_steroid),
+  conf_low = c(
+    k_recent_hat - zcrit * se_k_recent,
+    g_hat - zcrit * se_g,
+    k_steroid_hat - zcrit * se_k_steroid
+  ),
+  conf_high = c(
+    k_recent_hat + zcrit * se_k_recent,
+    g_hat + zcrit * se_g,
+    k_steroid_hat + zcrit * se_k_steroid
+  )
+)
+
+cat("Estimated k values and 95% Wald confidence intervals\n")
+print(estimate_table)
+cat("\n")
+
+# -----------------------------
+# Hypothesis test for H0: g = 0
+# -----------------------------
+
+wald_table <- summary(model_alt)$coefficients
+wald_g <- wald_table["log_ratio_steroid", , drop = FALSE]
+
+cat("Wald test for H0: g = 0\n")
+print(wald_g)
+cat("\n")
+
+lr_test <- anova(model_null, model_alt, test = "Chisq")
+
+cat("Likelihood-ratio test for H0: g = 0\n")
+print(lr_test)
+cat("\n")
+
+cat("AIC comparison\n")
+print(AIC(model_null, model_alt))
+cat("\n")
+
+lr_p <- lr_test$`Pr(>Chi)`[2]
+wald_p <- wald_g[1, "Pr(>|z|)"]
+
+cat("Plain-language conclusion\n")
+cat("Recent-era k estimate:", k_recent_hat, "\n")
+cat("Steroid-era k estimate:", k_steroid_hat, "\n")
+cat("Estimated change g = steroid k - recent k:", g_hat, "\n")
+cat("Wald p-value for g:", wald_p, "\n")
+cat("Likelihood-ratio p-value for g:", lr_p, "\n")
+
+if (!is.na(lr_p) && lr_p < 0.05) {
+  cat(
+    "At the 5% level, reject H0: g = 0. ",
+    "The estimated Bill James exponent k differs significantly between eras.\n",
+    sep = ""
+  )
+} else {
+  cat(
+    "At the 5% level, fail to reject H0: g = 0. ",
+    "There is not strong evidence that k differs between eras.\n",
+    sep = ""
+  )
+}
+cat("\n")
+```
+
+## Python
+
+```{python}
+# Problem 2-4
+
+import warnings
+
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from scipy.stats import norm, chi2
+
+
+Teams = pd.read_csv("data/Teams.csv")
+
+# 데이터 전처리
+teams_2_4 = Teams[
+    (
+        ((Teams["yearID"] >= 1994) & (Teams["yearID"] <= 2005)) |
+        ((Teams["yearID"] >= 2010) & (Teams["yearID"] <= 2025))
+    ) &
+    (Teams["yearID"] != 2020) &
+    Teams["W"].notna() &
+    Teams["L"].notna() &
+    Teams["R"].notna() &
+    Teams["RA"].notna() &
+    (Teams["W"] + Teams["L"] > 0) &
+    (Teams["R"] > 0) &
+    (Teams["RA"] > 0)
+].copy()
+
+teams_2_4["G"] = teams_2_4["W"] + teams_2_4["L"]
+teams_2_4["RS"] = teams_2_4["R"]
+teams_2_4["WPct"] = teams_2_4["W"] / teams_2_4["G"]
+teams_2_4["log_ratio"] = np.log(teams_2_4["R"] / teams_2_4["RA"])
+teams_2_4["steroid"] = np.where(
+    (teams_2_4["yearID"] >= 1994) & (teams_2_4["yearID"] <= 2005),
+    1,
+    0
+)
+teams_2_4["era"] = np.where(
+    (teams_2_4["yearID"] >= 1994) & (teams_2_4["yearID"] <= 2005),
+    "Steroid era: 1994-2005",
+    "Recent era: 2010-2025"
+)
+
+teams_2_4["log_ratio_steroid"] = (
+    teams_2_4["log_ratio"] * teams_2_4["steroid"]
+)
+
+teams_2_4["era"] = pd.Categorical(
+    teams_2_4["era"],
+    categories=[
+        "Recent era: 2010-2025",
+        "Steroid era: 1994-2005"
+    ],
+    ordered=True
+)
+
+teams_2_4 = teams_2_4[
+    [
+        "yearID", "franchID", "teamID", "W", "L", "G",
+        "RS", "RA", "WPct", "log_ratio",
+        "steroid", "era", "log_ratio_steroid"
+    ]
+].copy()
+
+teams_2_4 = teams_2_4[
+    (teams_2_4["WPct"] > 0) &
+    (teams_2_4["WPct"] < 1)
+].copy()
+
+print("Years used:")
+print(sorted(teams_2_4["yearID"].unique()))
+print("\nNumber of team-seasons by era:")
+print(teams_2_4["era"].value_counts(sort=False))
+print()
+
+if teams_2_4["yearID"].max() < 2025:
+    warnings.warn("The installed Lahman package does not include data through 2025.")
+
+
+# -----------------------------
+# Logistic model implied by the given formula
+#
+# Given:
+#   WPct(i,t) = 1 / (1 + (RA_it / RS_it)^(k + g I_steroid))
+#
+# Then:
+#   logit(WPct) = (k + g I_steroid) * log(RS / RA)
+#               = k * log(RS / RA)
+#                 + g * I_steroid * log(RS / RA)
+#
+# Therefore:
+#   coefficient of log_ratio         = k for the recent era
+#   coefficient of log_ratio_steroid = g, the steroid-era change in k
+#   steroid-era k                    = k + g
+# -----------------------------
+
+X_null = teams_2_4[["log_ratio"]]
+y = teams_2_4["WPct"]
+
+model_null = sm.GLM(
+    y,
+    X_null,
+    family=sm.families.Binomial(),
+    freq_weights=teams_2_4["G"]
+).fit(maxiter=100)
+
+X_alt = teams_2_4[["log_ratio", "log_ratio_steroid"]]
+
+model_alt = sm.GLM(
+    y,
+    X_alt,
+    family=sm.families.Binomial(),
+    freq_weights=teams_2_4["G"]
+).fit(maxiter=100)
+
+print("Null model: common k for both eras")
+print(model_null.summary())
+print()
+
+print("Alternative model: different k for steroid era")
+print(model_alt.summary())
+print()
+
+
+# -----------------------------
+# Estimates and confidence intervals
+# -----------------------------
+
+b = model_alt.params
+V = model_alt.cov_params()
+
+k_recent_hat = b["log_ratio"]
+g_hat = b["log_ratio_steroid"]
+k_steroid_hat = k_recent_hat + g_hat
+
+se_k_recent = np.sqrt(V.loc["log_ratio", "log_ratio"])
+se_g = np.sqrt(V.loc["log_ratio_steroid", "log_ratio_steroid"])
+se_k_steroid = np.sqrt(
+    V.loc["log_ratio", "log_ratio"] +
+    V.loc["log_ratio_steroid", "log_ratio_steroid"] +
+    2 * V.loc["log_ratio", "log_ratio_steroid"]
+)
+
+zcrit = norm.ppf(0.975)
+
+estimate_table = pd.DataFrame({
+    "quantity": [
+        "k_recent",
+        "g_change_steroid_minus_recent",
+        "k_steroid"
+    ],
+    "estimate": [k_recent_hat, g_hat, k_steroid_hat],
+    "std_error": [se_k_recent, se_g, se_k_steroid],
+    "conf_low": [
+        k_recent_hat - zcrit * se_k_recent,
+        g_hat - zcrit * se_g,
+        k_steroid_hat - zcrit * se_k_steroid
+    ],
+    "conf_high": [
+        k_recent_hat + zcrit * se_k_recent,
+        g_hat + zcrit * se_g,
+        k_steroid_hat + zcrit * se_k_steroid
+    ]
+})
+
+print("Estimated k values and 95% Wald confidence intervals")
+print(estimate_table)
+print()
+
+
+# -----------------------------
+# Hypothesis test for H0: g = 0
+# -----------------------------
+
+wald_table = pd.DataFrame({
+    "Estimate": model_alt.params,
+    "Std. Error": model_alt.bse,
+    "z value": model_alt.tvalues,
+    "Pr(>|z|)": model_alt.pvalues
+})
+
+wald_g = wald_table.loc[["log_ratio_steroid"]]
+
+print("Wald test for H0: g = 0")
+print(wald_g)
+print()
+
+lr_stat = model_null.deviance - model_alt.deviance
+lr_df = model_null.df_resid - model_alt.df_resid
+lr_p = chi2.sf(lr_stat, df=lr_df)
+
+lr_test = pd.DataFrame({
+    "Resid. Df": [model_null.df_resid, model_alt.df_resid],
+    "Resid. Dev": [model_null.deviance, model_alt.deviance],
+    "Df": [np.nan, lr_df],
+    "Deviance": [np.nan, lr_stat],
+    "Pr(>Chi)": [np.nan, lr_p]
+}, index=["model_null", "model_alt"])
+
+print("Likelihood-ratio test for H0: g = 0")
+print(lr_test)
+print()
+
+print("AIC comparison")
+aic_table = pd.DataFrame({
+    "df": [len(model_null.params), len(model_alt.params)],
+    "AIC": [model_null.aic, model_alt.aic]
+}, index=["model_null", "model_alt"])
+print(aic_table)
+print()
+
+wald_p = wald_g.loc["log_ratio_steroid", "Pr(>|z|)"]
+
+print("Plain-language conclusion")
+print("Recent-era k estimate:", k_recent_hat)
+print("Steroid-era k estimate:", k_steroid_hat)
+print("Estimated change g = steroid k - recent k:", g_hat)
+print("Wald p-value for g:", wald_p)
+print("Likelihood-ratio p-value for g:", lr_p)
+
+if not pd.isna(lr_p) and lr_p < 0.05:
+    print(
+        "At the 5% level, reject H0: g = 0. "
+        "The estimated Bill James exponent k differs significantly between eras."
+    )
+else:
+    print(
+        "At the 5% level, fail to reject H0: g = 0. "
+        "There is not strong evidence that k differs between eras."
+    )
+
+print()
+```
+
+:::
+
+분석 결과, 최근 시대의 지수는 k_hat^recent=1.7532 이고, 스테로이드 시대의 지수는 k_hat^steroid=1.9148 로 추정되었다. 따라서 스테로이드 시대의 k가 최근 시대보다 약 0.1616 더 크다.
+Wald 검정과 우도비 검정의 p-value가 모두 약 0.031로 0.05보다 작으므로, 유의수준 5%에서 두 시대의 k 차이는 통계적으로 유의하다. 또한 AIC도 시대별 차이를 허용한 모형에서 더 작게 나타났다. 따라서 스테로이드 시대와 최근 시대의 Bill James 지수 k는 같다고 보기 어렵다.
+
+
 # 3부  데이터 분석 기술
 
 숙제 2에서는 제출용 GitHub 저장소에 작업한 Quarto markdown 소스 파일(`hw02.qmd`)을 올리면 GitHub에서 자동으로 HTML 파일 및 주피터 노트북 파일(`.ipynb`)을 만들고 이것을 [GitHub Pages](https://docs.github.com/en/pages/quickstart)에서 웹페이지로 보이도록 설정하였다. 
@@ -2262,7 +2696,7 @@ $$
 ## 문제 3-1. Dockerfile 설정
 
 로컬 저장소 최상위 디렉토리에 아래와 같은 `Dockerfile` 파일을 추가한다. 
-```{yml}
+```yaml
 # 1. 기반 이미지 설정
 FROM rocker/tidyverse:4.4.0
 
@@ -2320,7 +2754,7 @@ EXPOSE 8888
 
 숙제 2에서 만들었던 `publish.yml`을 수정하여 기존의 배포 단계 끝에 Docker 컨테이너 이미지를 빌드하고 Github Container Registry (GHCR)에 푸시하는 단계를 추가한다.
 
-```{yml}
+```yaml
 # ... (기존 Quarto Render 단계 이후)
 
       - name: Log in to GitHub Container Registry
@@ -2348,7 +2782,7 @@ GitHub Page를 사용하여 저장소를 웹페이지로 활용하는 부분은 
 
 웹페이지에서 노트북을 내려받는 대신 [Binder](mybinder.org) 서비스를 이용하여 온라인으로 노트북을 실행할 수 있도록 위해 `README.md` 파일을 로컬 저장소 최상위 디렉토리에 다음과 같이 만들자.
 
-```{markdown}
+```markdown
 # 숙제 3
 
 이름: [아무개]
