@@ -4552,7 +4552,7 @@ Model Family:                Binomial   Df Model:                           24
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -1899.6
 Date:                Sun, 14 Jun 2026   Deviance:                       3799.1
-Time:                        06:00:22   Pearson chi2:                 4.50e+03
+Time:                        06:25:41   Pearson chi2:                 4.50e+03
 No. Iterations:                     6   Pseudo R-squ. (CS):             0.1849
 Covariance Type:            nonrobust                                         
 ====================================================================================================
@@ -4685,7 +4685,7 @@ Model Family:                Binomial   Df Model:                           23
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -1899.7
 Date:                Sun, 14 Jun 2026   Deviance:                       3799.5
-Time:                        06:00:25   Pearson chi2:                 4.50e+03
+Time:                        06:25:44   Pearson chi2:                 4.50e+03
 No. Iterations:                     6   Pseudo R-squ. (CS):             0.1848
 Covariance Type:            nonrobust                                         
 ====================================================================================================
@@ -6280,7 +6280,7 @@ Model Family:                Binomial   Df Model:                           23
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -26007.
 Date:                Sun, 14 Jun 2026   Deviance:                       80.780
-Time:                        06:00:28   Pearson chi2:                     80.7
+Time:                        06:25:47   Pearson chi2:                     80.7
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.9715
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -6408,7 +6408,7 @@ Model Family:                Binomial   Df Model:                            4
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -26012.
 Date:                Sun, 14 Jun 2026   Deviance:                       90.105
-Time:                        06:00:30   Pearson chi2:                     90.1
+Time:                        06:25:49   Pearson chi2:                     90.1
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.9708
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -7519,9 +7519,9 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 <div class="cell-output cell-output-stdout">
 <pre><code>Negative binomial full model fitted.
 Full-model warnings:
-[1] &quot;iteration limit reached&quot;
+[1] &quot;iteration limit reached&quot; &quot;NaNs produced&quot;          
 
-Start:  AIC=2903.67
+Start:  AIC=2903.71
 W ~ offset(log(G)) + logRS + logRA + H + X2B + X3B + HR + BB + 
     SO + CS + HBP + SF + ERA + CG + SHO + IPouts + HA + HRA + 
     BBA + SOA + E + DP + FP + SV
@@ -7567,69 +7567,54 @@ missing value where TRUE/FALSE needed </code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb198"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb198-1"><a href="#cb198-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(nb_step_model)) {</span>
 <span id="cb198-2"><a href="#cb198-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Negative binomial selected/final model</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
 <span id="cb198-3"><a href="#cb198-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">formula</span>(nb_step_model))</span>
-<span id="cb198-4"><a href="#cb198-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">summary</span>(nb_step_model))</span>
-<span id="cb198-5"><a href="#cb198-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Estimated theta:&quot;</span>, nb_step_model<span class="sc">$</span>theta, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb198-6"><a href="#cb198-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;SE(theta):&quot;</span>, nb_step_model<span class="sc">$</span>SE.theta, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb198-7"><a href="#cb198-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (nb_step_model<span class="sc">$</span>theta <span class="sc">&gt;</span> <span class="dv">1000</span>) {</span>
-<span id="cb198-8"><a href="#cb198-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;Theta is very large, so the negative binomial model is nearly Poisson.</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb198-9"><a href="#cb198-9" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb198-10"><a href="#cb198-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb198-11"><a href="#cb198-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb198-4"><a href="#cb198-4" aria-hidden="true" tabindex="-1"></a>  nb_coef <span class="ot">&lt;-</span> <span class="fu">coef</span>(nb_step_model)</span>
+<span id="cb198-5"><a href="#cb198-5" aria-hidden="true" tabindex="-1"></a>  nb_se <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcov</span>(nb_step_model)))</span>
+<span id="cb198-6"><a href="#cb198-6" aria-hidden="true" tabindex="-1"></a>  nb_coef_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb198-7"><a href="#cb198-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">Estimate =</span> nb_coef,</span>
+<span id="cb198-8"><a href="#cb198-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">Std_Error =</span> nb_se,</span>
+<span id="cb198-9"><a href="#cb198-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">z_value =</span> nb_coef <span class="sc">/</span> nb_se,</span>
+<span id="cb198-10"><a href="#cb198-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">p_value =</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">pnorm</span>(<span class="fu">abs</span>(nb_coef <span class="sc">/</span> nb_se), <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb198-11"><a href="#cb198-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb198-12"><a href="#cb198-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(nb_coef_table)</span>
+<span id="cb198-13"><a href="#cb198-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;Estimated theta:&quot;</span>, nb_step_model<span class="sc">$</span>theta, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb198-14"><a href="#cb198-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;SE(theta):&quot;</span>, nb_step_model<span class="sc">$</span>SE.theta, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb198-15"><a href="#cb198-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.finite</span>(nb_step_model<span class="sc">$</span>theta) <span class="sc">&amp;&amp;</span> nb_step_model<span class="sc">$</span>theta <span class="sc">&gt;</span> <span class="dv">1000</span>) {</span>
+<span id="cb198-16"><a href="#cb198-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;Theta is very large, so the negative binomial model is nearly Poisson.</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb198-17"><a href="#cb198-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb198-18"><a href="#cb198-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb198-19"><a href="#cb198-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Negative binomial selected/final model
 W ~ offset(log(G)) + logRS + logRA + H + X2B + X3B + HR + BB + 
     SO + CS + HBP + SF + ERA + CG + SHO + IPouts + HA + HRA + 
     BBA + SOA + E + DP + FP + SV
-
-Call:
-MASS::glm.nb(formula = count_full_formula, data = teams_2_3, 
-    control = glm.control(maxit = 100), init.theta = 13771751900, 
-    link = log)
-
-Coefficients:
-              Estimate Std. Error z value Pr(&gt;|z|)    
-(Intercept) -6.985e+00  1.515e+01  -0.461    0.645    
-logRS        9.382e-01  1.676e-01   5.598 2.17e-08 ***
-logRA       -1.511e-01  3.186e-01  -0.474    0.635    
-H           -1.149e-04  1.578e-04  -0.728    0.467    
-X2B         -7.391e-05  2.915e-04  -0.254    0.800    
-X3B         -3.153e-04  7.275e-04  -0.433    0.665    
-HR          -1.912e-04  3.154e-04  -0.606    0.544    
-BB          -1.159e-04  1.363e-04  -0.850    0.395    
-SO          -4.593e-05  6.376e-05  -0.720    0.471    
-CS          -4.217e-04  6.124e-04  -0.689    0.491    
-HBP          5.168e-05  3.860e-04   0.134    0.894    
-SF          -3.949e-04  7.997e-04  -0.494    0.621    
-ERA         -6.020e-02  8.039e-02  -0.749    0.454    
-CG           3.181e-03  2.570e-03   1.238    0.216    
-SHO          2.082e-03  1.802e-03   1.155    0.248    
-IPouts       1.872e-04  1.918e-04   0.976    0.329    
-HA          -1.528e-04  1.717e-04  -0.890    0.374    
-HRA         -3.412e-04  3.515e-04  -0.970    0.332    
-BBA         -8.928e-05  1.446e-04  -0.618    0.537    
-SOA          2.413e-05  6.930e-05   0.348    0.728    
-E           -1.225e-04  2.497e-03  -0.049    0.961    
-DP           2.457e-04  3.784e-04   0.649    0.516    
-FP           9.231e-01  1.517e+01   0.061    0.951    
-SV           5.806e-03  9.787e-04   5.932 2.99e-09 ***
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-
-(Dispersion parameter for Negative Binomial(13771751904) family taken to be 1)
-
-    Null deviance: 864.116  on 449  degrees of freedom
-Residual deviance:  55.842  on 426  degrees of freedom
-AIC: 2905.7
-
-Number of Fisher Scoring iterations: 2
-
-              Theta:  13771751904 
-          Std. Err.:  161812128592 
-Warning while fitting theta: iteration limit reached 
-
- 2 x log-likelihood:  -2855.671 
-Estimated theta: 13771751904 
-SE(theta): 161812128592 
+                 Estimate    Std_Error     z_value      p_value
+(Intercept) -6.985186e+00 1.514902e+01 -0.46109831 6.447281e-01
+logRS        9.382480e-01 1.676104e-01  5.59779108 2.171001e-08
+logRA       -1.510809e-01 3.185569e-01 -0.47426662 6.353098e-01
+H           -1.148902e-04 1.577786e-04 -0.72817368 4.665073e-01
+X2B         -7.391274e-05 2.915044e-04 -0.25355617 7.998385e-01
+X3B         -3.153252e-04 7.275342e-04 -0.43341638 6.647123e-01
+HR          -1.912024e-04 3.154259e-04 -0.60617197 5.444006e-01
+BB          -1.159131e-04 1.363077e-04 -0.85037847 3.951147e-01
+SO          -4.592932e-05 6.375756e-05 -0.72037448 4.712945e-01
+CS          -4.216805e-04 6.124118e-04 -0.68855705 4.911021e-01
+HBP          5.167569e-05 3.860106e-04  0.13387118 8.935044e-01
+SF          -3.948803e-04 7.996573e-04 -0.49381187 6.214390e-01
+ERA         -6.019811e-02 8.039473e-02 -0.74878173 4.539888e-01
+CG           3.181189e-03 2.570432e-03  1.23760910 2.158610e-01
+SHO          2.081675e-03 1.801546e-03  1.15549344 2.478884e-01
+IPouts       1.872117e-04 1.918058e-04  0.97604800 3.290407e-01
+HA          -1.527678e-04 1.717431e-04 -0.88951371 3.737271e-01
+HRA         -3.411562e-04 3.515412e-04 -0.97045866 3.318179e-01
+BBA         -8.927688e-05 1.445676e-04 -0.61754406 5.368759e-01
+SOA          2.413249e-05 6.930074e-05  0.34822845 7.276686e-01
+E           -1.224801e-04 2.497394e-03 -0.04904317 9.608849e-01
+DP           2.457063e-04 3.783930e-04  0.64934147 5.161177e-01
+FP           9.230567e-01 1.516566e+01  0.06086492 9.514668e-01
+SV           5.805869e-03 9.787448e-04  5.93195391 2.993507e-09
+Estimated theta: 9283486587 
+SE(theta): NaN 
 Theta is very large, so the negative binomial model is nearly Poisson.</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb200"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb200-1"><a href="#cb200-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 예측성능평가 </span></span>
@@ -7702,7 +7687,7 @@ Theta is very large, so the negative binomial model is nearly Poisson.</code></p
   df    logLik      AIC residual_deviance residual_df    W_MAE   W_RMSE
 1  6 -1294.682 2601.364         106.11932         444 2.443041 3.052365
 2  7 -1430.172 2874.345          60.48528         443 2.562642 3.221493
-3 25 -1427.836 2905.671          55.84220         426 2.439276 3.105891
+3 25 -1427.857 2905.714          55.84219         426 2.439276 3.105891
     WPct_MAE  WPct_RMSE
 1 0.01508298 0.01884450
 2 0.01582138 0.01988859
@@ -8014,7 +7999,7 @@ Model Family:                Binomial   Df Model:                            4
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -26012.
 Date:                Sun, 14 Jun 2026   Deviance:                       90.105
-Time:                        06:00:34   Pearson chi2:                     90.1
+Time:                        06:25:55   Pearson chi2:                     90.1
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.9708
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -8048,7 +8033,7 @@ Model Family:                 Poisson   Df Model:                           23
 Link Function:                    Log   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -1142.7
 Date:                Sun, 14 Jun 2026   Deviance:                       45.395
-Time:                        06:00:34   Pearson chi2:                     45.2
+Time:                        06:25:55   Pearson chi2:                     45.2
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.8315
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -8132,7 +8117,7 @@ Model Family:                 Poisson   Df Model:                            4
 Link Function:                    Log   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -1145.7
 Date:                Sun, 14 Jun 2026   Deviance:                       51.436
-Time:                        06:00:36   Pearson chi2:                     51.2
+Time:                        06:25:57   Pearson chi2:                     51.2
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.8286
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -8406,7 +8391,7 @@ Dep. Variable:                      W   No. Observations:                  360
 Model:               NegativeBinomial   Df Residuals:                      355
 Method:                           MLE   Df Model:                            4
 Date:                Sun, 14 Jun 2026   Pseudo R-squ.:                  0.1919
-Time:                        06:00:41   Log-Likelihood:                -1145.7
+Time:                        06:26:03   Log-Likelihood:                -1145.7
 converged:                      False   LL-Null:                       -1417.8
 Covariance Type:            nonrobust   LLR p-value:                1.834e-116
 ==============================================================================
@@ -8991,7 +8976,7 @@ Model Family:                Binomial   Df Model:                            0
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -50686.
 Date:                Sun, 14 Jun 2026   Deviance:                       282.32
-Time:                        06:00:41   Pearson chi2:                     282.
+Time:                        06:26:03   Pearson chi2:                     282.
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.9598
 Covariance Type:            nonrobust                                         
 ==============================================================================
@@ -9015,7 +9000,7 @@ Model Family:                Binomial   Df Model:                            1
 Link Function:                  Logit   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:                -50684.
 Date:                Sun, 14 Jun 2026   Deviance:                       278.56
-Time:                        06:00:41   Pearson chi2:                     278.
+Time:                        06:26:03   Pearson chi2:                     278.
 No. Iterations:                     4   Pseudo R-squ. (CS):             0.9600
 Covariance Type:            nonrobust                                         
 =====================================================================================
